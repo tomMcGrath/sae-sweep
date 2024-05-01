@@ -14,6 +14,7 @@ class SparseAutoEncoder(torch.nn.Module):
             has_encoder_bias: bool = True,
             has_decoder_bias: bool = True,
             ):
+        super().__init__()
         self.model_dim = model_dim
         self.feature_dim = feature_dim
 
