@@ -27,3 +27,6 @@ class ActivationsDataset(torch.utils.data.Dataset):
     
     def __len__(self):
         return self.activations.shape[0]
+    
+    def activations_dim(self):
+        return self.activations.shape[1]
