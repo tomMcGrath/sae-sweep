@@ -13,10 +13,15 @@ class SparseAutoEncoder(torch.nn.Module):
             feature_dim: int,
             has_encoder_bias: bool = True,
             has_decoder_bias: bool = True,
+            input_noise: bool = False,
+            input_noise_scale: float = 0.,
             ):
         super().__init__()
         self.model_dim = model_dim
         self.feature_dim = feature_dim
+        self.input_noise = input_noise
+        if self.input_noise:
+            self.input_noise_scale = input_noise_scale
 
         # Create & initialise layers
         # TODO(tomMcGrath): add optional initializers
@@ -24,6 +29,10 @@ class SparseAutoEncoder(torch.nn.Module):
         self.decoder = torch.nn.Linear(feature_dim, model_dim, bias=has_decoder_bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.input_noise:
+            input_noise = torch.normal(0, self.input_noise_scale * torch.ones_like(x))
+            x += input_noise
+
         x = self.encoder(x)
         f = F.relu(x)
         return {'x_reconstruct': self.decoder(f), 'features': f}
