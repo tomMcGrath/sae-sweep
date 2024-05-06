@@ -15,16 +15,19 @@ def main():
         'activations/layers-16-1.pt',
         'activations/layers-16-2.pt',
         'activations/layers-16-3.pt',
-        'activations/layers-16-4.pt',
-        'activations/layers-16-5.pt',
-        'activations/layers-16-6.pt',
-        'activations/layers-16-7.pt',
+        # 'activations/layers-16-4.pt',
+        # 'activations/layers-16-5.pt',
+        # 'activations/layers-16-6.pt',
+        # 'activations/layers-16-7.pt',
     ]
     print('Loading activations data')
     dataset = activations_dataset.ActivationsDataset(data_paths)
     print(f'Loaded {len(dataset):.2e} activations.')
 
+    # PyTorch performance settings
     # torch.set_float32_matmul_precision('high')
+    # torch.backends.cuda.matmul.allow_tf32 = True
+    # torch.backends.cudnn.allow_tf32 = True
 
     device = 'cuda:1'
     bsz = wandb.config.batch_size
@@ -34,6 +37,7 @@ def main():
         sampler=RandomSampler(dataset),
         pin_memory=True,
         pin_memory_device=device,
+        num_workers=1,
     )
 
     print('Building model')
@@ -49,7 +53,7 @@ def main():
         )
     sae.to(device)
     sae = sae.bfloat16()
-    sae = torch.compile(sae)
+    # sae = torch.compile(sae)
     lr = wandb.config.learning_rate
     beta1 = wandb.config.adam_beta1
     beta2 = wandb.config.adam_beta2
@@ -62,8 +66,8 @@ def main():
     tensorboard_trace_handler = torch.profiler.tensorboard_trace_handler('traces/')
     with torch.profiler.profile(
         schedule=torch.profiler.schedule(
-            wait=4,
-            warmup=2,
+            wait=10,
+            warmup=10,
             active=6,
             repeat=1
         ),
@@ -113,10 +117,10 @@ if __name__ == '__main__':
     config = {
         'expansion_factor': 16,
         'batch_size': 8192,
-        'learning_rate': 1e-5,
+        'learning_rate': 1e-4,
         'adam_beta1': 0.9,
         'adam_beta2': 0.99,
-        'l1_multiplier': 1.,
+        'l1_multiplier': 1e-4,
         'input_noise': False,
         'input_noise_scale': 0.,
     }
